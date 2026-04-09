@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>exFreeze | Pro</title>
+    <style>
+        :root {
+            --accent: #0084ff;
+            --bg: #000000;
+            --panel: #0a0a0a;
+            --border: #222222;
+            --text-main: #ffffff;
+            --text-dim: #777777;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- Warning Screen --- */
+        #warning-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .warning-box {
+            max-width: 400px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .warning-box h2 {
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .warning-box p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        .btn-confirm {
+            background: var(--text-main);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* --- Main Dashboard --- */
+        .dashboard {
+            width: 850px;
+            height: 550px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            overflow: hidden;
+            display: none;
+        }
+
+        .sidebar {
+            background: #050505;
+            border-right: 1px solid var(--border);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            display: block;
+            font-weight: 700;
+        }
+
+        .power-val {
+            font-size: 2.2rem;
+            font-weight: 200;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 2px;
+            background: #333;
+            appearance: none;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--text-main);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .main-btn {
+            margin-top: auto;
+            background: var(--text-main);
+            color: #000;
+            border: none;
+            padding: 16px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .main-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* --- Center Content --- */
+        .content {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .status-display {
+            margin-bottom: 40px;
+        }
+
+        .status-display h3 {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        #status-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .btn-help {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        /* --- Help Modal --- */
+        #help-modal {
+            position: absolute;
+            inset: 20px;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            z-index: 50;
+            padding: 30px;
+            display: none;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .help-content {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+            overflow-y: auto;
+        }
+
+        .help-content b {
+            color: var(--text-main);
+            display: block;
+            margin-top: 15px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        .footer a {
+            color: var(--text-main);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="warning-overlay">
+        <div class="warning-box">
+            <h2>System Advisory</h2>
+            <p>This tool uses high resource allocation to prioritize this tab. This will cause background extensions to lag and stop working.</p>
+            <button class="btn-confirm" onclick="enterApp()">I Understand</button>
+        </div>
+    </div>
+
+    <div class="dashboard" id="main-ui">
+        <aside class="sidebar">
+            <div class="logo">exFreeze</div>
+            
+            <div class="control-section">
+                <span class="label">Memory Priority</span>
+                <div class="power-val" id="p-val">1000MB</div>
+                <input type="range" id="p-slider" min="100" max="1000" value="1000">
+                <p style="font-size: 0.65rem; color: var(--text-dim); margin-top: 10px;">
+                    Keep at 1000MB for the best outcome.
+                </p>
+            </div>
+
+            <button class="main-btn" id="action-btn">Initialize</button>
+        </aside>
+
+        <section class="content">
+            <button class="btn-help" onclick="toggleHelp()">How does this work?</button>
+
+            <div class="status-display">
+                <h3>System Status</h3>
+                <div id="status-text">IDLE</div>
+            </div>
+
+            <div id="help-modal">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="font-size: 0.9rem;">How it works</h3>
+                    <button class="btn-help" onclick="toggleHelp()">Close</button>
+                </div>
+                <div class="help-content">
+                    <b>Resource Hijacking</b>
+                    By creating a massive loop of data in this tab, we force Chrome to give us all the CPU and RAM. This leaves nothing left for background extensions.
+                    
+                    <b>Background Throttling</b>
+                    Chrome naturally slows down background tabs and extensions when one tab is using too many resources. We exploit this to make your school filters lag out.
+                    
+                    <b>1000MB Limit</b>
+                    Setting this to 1000MB is the "sweet spot." It’s enough to break the extension's connection to the server, but not enough to make your Chromebook crash or restart.
+                    
+                    <b>Instructional Cycle</b>
+                    The tool sends thousands of fake instructions per second. When a school extension tries to "check" what you are doing, it gets stuck in a line behind our fake instructions, making it useless.
+                </div>
+            </div>
+
+            <div class="footer">
+                A part of the <a href="https://discord.gg/vzcollection" target="_blank">VZ Collection</a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let running = false;
+        let power = 1000;
+        let cycle = [];
+        let engineInterval;
+
+        function enterApp() {
+            document.getElementById('warning-overlay').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'grid';
+        }
+
+        function toggleHelp() {
+            const modal = document.getElementById('help-modal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        const slider = document.getElementById('p-slider');
+        const pVal = document.getElementById('p-val');
+        slider.oninput = () => {
+            power = slider.value;
+            pVal.textContent = power + "MB";
+        };
+
+        const btn = document.getElementById('action-btn');
+        const status = document.getElementById('status-text');
+
+        // New Smart Engine Tactics
+        function tacticalEngine() {
+            if (!running) return;
+
+            // 1. Heap Pressure: Forces the browser to keep this tab's memory alive
+            if (cycle.length < 12) {
+                const data = new Uint8Array(1024 * 1024 * (power / 30));
+                // Fill with random noise to prevent Chrome from compressing the memory
+                for(let i=0; i<data.length; i+=1024) data[i] = Math.random() * 255;
+                cycle.push(data);
+            } else {
+                cycle.shift();
+            }
+
+            // 2. CPU Jitter: Short burst of math to hog the main thread for 10ms
+            const start = performance.now();
+            while (performance.now() - start < 10) {
+                Math.atan2(Math.random(), Math.random());
+            }
+
+            // 3. IO Ping: Pings the data storage to keep the background tasks blocked
+            try {
+                localStorage.setItem('__ex_ping', Date.now());
+            } catch(e) {}
+
+            engineInterval = setTimeout(tacticalEngine, 20);
+        }
+
+        btn.onclick = () => {
+            running = !running;
+            if (running) {
+                btn.textContent = "Suspend";
+                btn.classList.add('active');
+                status.textContent = "RUNNING";
+                status.style.color = "var(--accent)";
+                tacticalEngine();
+            } else {
+                btn.textContent = "Initialize";
+                btn.classList.remove('active');
+                status.textContent = "IDLE";
+                status.style.color = "white";
+                clearTimeout(engineInterval);
+                cycle = [];
+                // Clean up the IO ping
+                localStorage.removeItem('__ex_ping');
+            }
+        };
+    </script>
+</body>
+</html>
